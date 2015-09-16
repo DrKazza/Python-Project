@@ -22,7 +22,7 @@ def readfastafile(Fastafile):
 	return seqs
 
 def printsequencelength(sequences):
-	"this function will take a dictionary of sequences and report the length of them
+	"this function will take a dictionary of sequences and report the length of them"
 	lengths={}
 	for name,seq in sequences.items():
 		lengths[name]=len(seq)
@@ -79,19 +79,24 @@ def lookforframe(dna):
 	totalvalids = 0
 	if frameref[1] :
 		validframe =1
+		print("Found frame1")
 		totalvalids +=1
 	if frameref[2] :
 		validframe =2
+		print("Found frame2")
 		totalvalids +=1
 	if frameref[3] :
 		validframe =3
+		print("Found frame3")
 		totalvalids +=1
 	if totalvalids ==1:
 		return validframe
 	elif totalvalids==0:
-		return "no valid frames"
+		return  99
+#		return "no valid frames"
 	else:
-		return "More than one valid frame"
+		return  98
+#		return "More than one valid frame"
 
 
 def stripORFs(dna, frame=1):
@@ -119,8 +124,82 @@ def fileORFs(fastafile):
 	seqs = readfastafile(fastafile)
 	fullseq={}
 	for name,seq in seqs.items():
-		frameref = lookforframe(seq)
-		if type(frameref)="int":
-			pass
-		else:
-			fullseq[name] = "No frame found"
+		for i in range(1,4):
+			subname = name + "Frame" + str(i)
+			fullseq[subname] = stripORFs(seq,i)
+	return fullseq
+
+def longestORFinfile(fastafile,frame):
+	"takes a fastafile strips the sequences and then searches for ORFs on a specific frame"
+	seqs = readfastafile(fastafile)
+	fullseq={}
+	longestORF = 0
+	seqname = []
+	Longestitem = {}
+	for name,seq in seqs.items():
+		fullseq[name] = stripORFs(seq,frame)
+	for name,orfs in fullseq.items():
+		for startbp,bases in orfs.items():
+			thislength = len(bases)
+			if thislength > longestORF:
+				seqname = [name]
+				tmp = startbp
+				longestORF = thislength
+			elif thislength== longestORF:
+				seqname.append(name)
+			else:
+				pass
+	print(startbp)
+	Longestitem[longestORF] = seqname
+	return Longestitem
+
+def longestORFinname(seqname, fastafile):
+	"finds a sequence in a file then will find the longest ORF the start position and the frame which it's on"
+	seqs = readfastafile(fastafile)
+	strippedorfs = {}
+	longestORF = []
+	lengthlongest = 0
+	longeststart = []
+	longestframe = []
+	for i in range(1,4):
+		thisframe = stripORFs (seqs[seqname],i)
+		for startbp, bases in thisframe.items():
+			if len(bases) > lengthlongest:
+				lengthlongest = len(bases)
+				longestORF = [bases]
+				longeststart = [startbp]
+				longestframe = [i]
+			elif len(bases) == lengthlongest:
+				longestORF.append(bases)
+				longeststart.append[startbp]
+				longestframe.append[i]
+			else:
+				pass
+	print("Longest ORF is %ibp starting at base %s on frame %s"% (lengthlongest, longeststart, longestframe))
+	print(longestORF)
+	return
+
+def findrepeats(fastafile, replen):
+	"Reads a fastafile and looks for all repeats, reports the number of repeats of length replen and the most frequent repeat"
+	seqs = readfastafile(fastafile)
+	repeatlist = {}
+	maxrepeat = []
+	maxrepno = 0
+	for name,seq in seqs.items():
+		for i in range(0,len(seq)-replen+1):
+			searchstring = seq[i:replen+i]
+			count = 0
+			for seqname,seqbps in seqs.items():
+				occur = seqbps.count(searchstring)
+				count = count + occur
+			if count > 1:
+				repeatlist[searchstring] = count
+				if count>maxrepno:
+					maxrepno = count
+					maxrepeat = [searchstring]
+				elif count == maxrepno and searchstring not in maxrepeat:
+					maxrepeat.append(searchstring)
+				else:
+					pass
+	print("The most repeated sequence of %ibps occurs %i times and is %s"% (replen, maxrepno, maxrepeat))
+	return repeatlist
