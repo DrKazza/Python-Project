@@ -151,7 +151,7 @@ def longestORFinfile(fastafile,frame):
 				seqname.append(name)
 			else:
 				pass
-	print(tmp)
+	print("Longest ORF starts at %i"% tmp)
 	Longestitem[longestORF] = seqname
 	return Longestitem
 
