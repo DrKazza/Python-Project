@@ -109,9 +109,11 @@ def stripORFs(dna, frame=1):
 	for i in range(frame-1, len(dna),3):
 		codon=dna[i:i+3]
 		if codon == startcodon :
-			#if there was previously a startcodon with no stopcodon i'm ignoring it
+			if codonopened:
+				pass
+			else:
+				startbp = i+1
 			codonopened = True
-			startbp = i+1
 		elif codonopened and codon in stopcodons:
 			codonopened = False #start looking for the next start
 			orfs[startbp] = dna[startbp-1:i+3]
@@ -149,7 +151,7 @@ def longestORFinfile(fastafile,frame):
 				seqname.append(name)
 			else:
 				pass
-	print(startbp)
+	print(tmp)
 	Longestitem[longestORF] = seqname
 	return Longestitem
 
